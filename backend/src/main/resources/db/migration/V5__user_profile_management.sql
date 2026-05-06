@@ -1,0 +1,4 @@
+ALTER TABLE users
+  ADD COLUMN avatar_url VARCHAR(512) NULL AFTER nickname,
+  ADD COLUMN gender VARCHAR(16) NOT NULL DEFAULT 'UNKNOWN' AFTER avatar_url,
+  ADD COLUMN birthday DATE NULL AFTER gender;

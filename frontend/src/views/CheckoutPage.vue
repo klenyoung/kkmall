@@ -3,8 +3,15 @@
     <a-row :gutter="16">
       <a-col :xs="24" :md="14">
         <a-card title="收货地址">
-          <a-select v-model:value="addressId" style="width:100%;margin-bottom:16px" placeholder="选择地址">
-            <a-select-option v-for="item in addresses" :key="item.id" :value="item.id">{{ item.receiverName }} {{ item.receiverPhone }} {{ item.region }}{{ item.detail }}</a-select-option>
+          <a-select
+            v-model:value="addressId"
+            style="width:100%;margin-bottom:16px"
+            placeholder="选择地址"
+            @change="syncSelectedAddress"
+          >
+            <a-select-option v-for="item in addresses" :key="item.id" :value="item.id">
+              {{ item.receiverName }} {{ item.receiverPhone }} {{ item.region }}{{ item.detail }}
+            </a-select-option>
           </a-select>
           <a-form layout="vertical">
             <a-form-item label="收货人"><a-input v-model:value="form.receiverName" /></a-form-item>
@@ -33,6 +40,7 @@ import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import ShopLayout from '../components/ShopLayout.vue'
 import { Address, CartView, mallApi } from '../api/mall'
+import { checkoutAddressSelection } from '../utils/checkoutAddress'
 import { money } from '../utils/money'
 
 const router = useRouter()
@@ -45,17 +53,28 @@ const shippingFee = computed(() => cart.value.productAmount >= 9900 ? 0 : 1000)
 async function load() {
   cart.value = await mallApi.cart()
   addresses.value = await mallApi.addresses()
-  addressId.value = addresses.value[0]?.id
+  const selection = checkoutAddressSelection(addresses.value)
+  addressId.value = selection.addressId
+  Object.assign(form, selection.form)
 }
+
+function syncSelectedAddress(selectedId?: number) {
+  const selection = checkoutAddressSelection(addresses.value, selectedId || addressId.value)
+  addressId.value = selection.addressId
+  Object.assign(form, selection.form)
+}
+
 async function saveAddress() {
   await mallApi.createAddress(form)
   message.success('地址已保存')
   await load()
 }
+
 async function submit() {
   if (!addressId.value) return message.warning('请先选择或保存地址')
   const order = await mallApi.createOrder(addressId.value, cart.value.items.map((item) => item.id)) as any
   router.push(`/pay/${order.id}`)
 }
+
 onMounted(load)
 </script>

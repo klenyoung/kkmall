@@ -102,7 +102,7 @@ async function login() {
   try {
     await mallApi.mockCode(phone.value)
     const data = await mallApi.login(phone.value, code.value) as any
-    auth.setUser(data.token, phone.value)
+    auth.setUser(data.token, data.user || phone.value)
     router.push(String(route.query.redirect || '/'))
   } finally {
     loading.value = false

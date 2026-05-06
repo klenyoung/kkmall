@@ -26,4 +26,19 @@ public class AddressController {
     public ApiResponse<Map<String, Object>> create(@RequestBody OrderApplicationService.AddressRequest request) {
         return ApiResponse.ok(service.createAddress(SecurityUtils.currentUserId(), request));
     }
+
+    @PutMapping("/{id}")
+    public ApiResponse<Map<String, Object>> update(@PathVariable Long id, @RequestBody OrderApplicationService.AddressRequest request) {
+        return ApiResponse.ok(service.updateAddress(SecurityUtils.currentUserId(), id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<Map<String, Object>> delete(@PathVariable Long id) {
+        return ApiResponse.ok(service.deleteAddress(SecurityUtils.currentUserId(), id));
+    }
+
+    @PatchMapping("/{id}/default")
+    public ApiResponse<Map<String, Object>> setDefault(@PathVariable Long id) {
+        return ApiResponse.ok(service.setDefaultAddress(SecurityUtils.currentUserId(), id));
+    }
 }

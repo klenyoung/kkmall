@@ -43,6 +43,7 @@ public class AuthApplicationService {
             user = new UserPo();
             user.phone = phoneNumber.value();
             user.nickname = "用户" + phoneNumber.value().substring(7);
+            user.gender = "UNKNOWN";
             user.role = Role.CUSTOMER.name();
             userMapper.insert(user);
         }
@@ -68,6 +69,9 @@ public class AuthApplicationService {
         userView.put("id", user.id);
         userView.put("phone", user.phone);
         userView.put("nickname", user.nickname);
+        userView.put("avatarUrl", user.avatarUrl);
+        userView.put("gender", user.gender == null ? "UNKNOWN" : user.gender);
+        userView.put("birthday", user.birthday);
         userView.put("role", user.role);
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("token", jwtService.issue(user.id, user.phone, user.role));

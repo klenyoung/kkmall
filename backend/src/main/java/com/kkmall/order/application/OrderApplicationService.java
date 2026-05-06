@@ -57,7 +57,7 @@ public class OrderApplicationService {
     }
 
     public List<Map<String, Object>> addresses(Long userId) {
-        List<AddressPo> rows = addressMapper.selectList(new QueryWrapper<AddressPo>().eq("user_id", userId).orderByDesc("is_default").orderByDesc("id"));
+        List<AddressPo> rows = addressMapper.selectList(new QueryWrapper<AddressPo>().eq("user_id", userId).orderByDesc("is_default").orderByDesc("updated_at").orderByDesc("id"));
         List<Map<String, Object>> result = new ArrayList<>();
         for (AddressPo row : rows) {
             result.add(CatalogApplicationService.mapOf("id", row.id, "receiverName", row.receiverName, "receiverPhone", row.receiverPhone, "region", row.region, "detail", row.detail, "isDefault", row.isDefault));
@@ -67,21 +67,61 @@ public class OrderApplicationService {
 
     @Transactional
     public Map<String, Object> createAddress(Long userId, AddressRequest request) {
-        if (Boolean.TRUE.equals(request.isDefault)) {
-            for (AddressPo item : addressMapper.selectList(new QueryWrapper<AddressPo>().eq("user_id", userId))) {
-                item.isDefault = 0;
-                addressMapper.updateById(item);
-            }
-        }
+        validateAddress(request);
+        List<AddressPo> existing = addressMapper.selectList(new QueryWrapper<AddressPo>().eq("user_id", userId));
+        if (existing.size() >= 20) throw new BusinessException("ADDRESS_LIMIT_EXCEEDED");
+        boolean defaultAddress = existing.isEmpty() || Boolean.TRUE.equals(request.isDefault);
+        if (defaultAddress) clearDefault(existing);
         AddressPo po = new AddressPo();
         po.userId = userId;
         po.receiverName = request.receiverName;
         po.receiverPhone = request.receiverPhone;
         po.region = request.region;
         po.detail = request.detail;
-        po.isDefault = Boolean.TRUE.equals(request.isDefault) ? 1 : 0;
+        po.isDefault = defaultAddress ? 1 : 0;
         addressMapper.insert(po);
         return CatalogApplicationService.mapOf("id", po.id);
+    }
+
+    @Transactional
+    public Map<String, Object> updateAddress(Long userId, Long addressId, AddressRequest request) {
+        validateAddress(request);
+        AddressPo po = userAddress(userId, addressId);
+        po.receiverName = request.receiverName;
+        po.receiverPhone = request.receiverPhone;
+        po.region = request.region;
+        po.detail = request.detail;
+        if (Boolean.TRUE.equals(request.isDefault)) {
+            clearDefault(addressMapper.selectList(new QueryWrapper<AddressPo>().eq("user_id", userId)));
+            po.isDefault = 1;
+        }
+        addressMapper.updateById(po);
+        return CatalogApplicationService.mapOf("id", po.id);
+    }
+
+    @Transactional
+    public Map<String, Object> deleteAddress(Long userId, Long addressId) {
+        AddressPo po = userAddress(userId, addressId);
+        boolean wasDefault = Integer.valueOf(1).equals(po.isDefault);
+        addressMapper.deleteById(addressId);
+        if (wasDefault) {
+            List<AddressPo> remaining = addressMapper.selectList(new QueryWrapper<AddressPo>().eq("user_id", userId).orderByDesc("updated_at").orderByDesc("id"));
+            if (!remaining.isEmpty()) {
+                AddressPo nextDefault = remaining.get(0);
+                nextDefault.isDefault = 1;
+                addressMapper.updateById(nextDefault);
+            }
+        }
+        return CatalogApplicationService.mapOf("id", addressId);
+    }
+
+    @Transactional
+    public Map<String, Object> setDefaultAddress(Long userId, Long addressId) {
+        AddressPo target = userAddress(userId, addressId);
+        clearDefault(addressMapper.selectList(new QueryWrapper<AddressPo>().eq("user_id", userId)));
+        target.isDefault = 1;
+        addressMapper.updateById(target);
+        return CatalogApplicationService.mapOf("id", target.id);
     }
 
     @Transactional
@@ -191,5 +231,32 @@ public class OrderApplicationService {
     public static class CreateOrderRequest {
         public Long addressId;
         public List<Long> cartItemIds;
+    }
+
+    private AddressPo userAddress(Long userId, Long addressId) {
+        AddressPo po = addressMapper.selectById(addressId);
+        if (po == null || !Objects.equals(po.userId, userId)) throw new BusinessException("ADDRESS_NOT_FOUND");
+        return po;
+    }
+
+    private void validateAddress(AddressRequest request) {
+        if (request == null) throw new BusinessException("ADDRESS_INVALID");
+        if (isBlank(request.receiverName)) throw new BusinessException("ADDRESS_RECEIVER_NAME_REQUIRED");
+        if (request.receiverPhone == null || !request.receiverPhone.matches("^1\\d{10}$")) throw new BusinessException("ADDRESS_RECEIVER_PHONE_INVALID");
+        if (isBlank(request.region)) throw new BusinessException("ADDRESS_REGION_REQUIRED");
+        if (isBlank(request.detail)) throw new BusinessException("ADDRESS_DETAIL_REQUIRED");
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private void clearDefault(List<AddressPo> addresses) {
+        for (AddressPo item : addresses) {
+            if (Integer.valueOf(1).equals(item.isDefault)) {
+                item.isDefault = 0;
+                addressMapper.updateById(item);
+            }
+        }
     }
 }

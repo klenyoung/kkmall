@@ -181,6 +181,62 @@ body {
   color: var(--brand) !important;
 }
 
+.account-page {
+  display: grid;
+  gap: 16px;
+}
+
+.account-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-radius: 8px;
+  padding: 22px;
+  background: #fff;
+}
+
+.account-header h1 {
+  margin: 0 0 6px;
+  font-size: 24px;
+}
+
+.account-header p,
+.avatar-uploader p,
+.address-item p {
+  margin: 0;
+  color: #666;
+}
+
+.avatar-uploader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.address-list {
+  display: grid;
+  gap: 12px;
+}
+
+.address-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
 .admin-page {
   min-height: 100vh;
   background: #f0f2f5;

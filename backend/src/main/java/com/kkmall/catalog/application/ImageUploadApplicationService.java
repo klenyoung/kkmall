@@ -44,12 +44,16 @@ public class ImageUploadApplicationService {
     }
 
     public Map<String, Object> uploadImage(MultipartFile file) {
+        return uploadImage(file, "products");
+    }
+
+    public Map<String, Object> uploadImage(MultipartFile file, String folder) {
         if (file == null || file.isEmpty()) throw new BusinessException("UPLOAD_FILE_EMPTY");
         String contentType = file.getContentType() == null ? "" : file.getContentType().toLowerCase(Locale.ROOT);
         if (!contentType.startsWith("image/")) throw new BusinessException("UPLOAD_IMAGE_ONLY");
         try {
             ensureBucket();
-            String objectName = objectName(file.getOriginalFilename());
+            String objectName = objectName(file.getOriginalFilename(), folder);
             try (java.io.InputStream input = file.getInputStream()) {
                 minioClient.putObject(PutObjectArgs.builder()
                         .bucket(bucket)
@@ -67,7 +71,7 @@ public class ImageUploadApplicationService {
             throw ex;
         } catch (Exception ex) {
             log.warn("MinIO upload failed, fallback to local storage: {}", ex.getMessage(), ex);
-            return saveLocal(file, contentType);
+            return saveLocal(file, contentType, folder);
         }
     }
 
@@ -76,13 +80,18 @@ public class ImageUploadApplicationService {
             if (objectName.startsWith("local/")) return Files.newInputStream(resolveLocal(objectName));
             return minioClient.getObject(GetObjectArgs.builder().bucket(bucket).object(objectName).build());
         } catch (Exception ex) {
+            try {
+                return Files.newInputStream(resolveObject(objectName));
+            } catch (Exception ignored) {
+                // Fall through to the public file fallback.
+            }
             throw new BusinessException("FILE_NOT_FOUND");
         }
     }
 
-    private Map<String, Object> saveLocal(MultipartFile file, String contentType) {
+    private Map<String, Object> saveLocal(MultipartFile file, String contentType, String folder) {
         try {
-            String objectName = "local/" + objectName(file.getOriginalFilename());
+            String objectName = "local/" + objectName(file.getOriginalFilename(), folder);
             Path target = resolveLocal(objectName);
             Files.createDirectories(target.getParent());
             try (InputStream input = file.getInputStream()) {
@@ -107,6 +116,12 @@ public class ImageUploadApplicationService {
         return target;
     }
 
+    private Path resolveObject(String objectName) {
+        Path target = localRoot.resolve(objectName).normalize();
+        if (!target.startsWith(localRoot)) throw new BusinessException("FILE_NOT_FOUND");
+        return target;
+    }
+
     private void ensureBucket() throws Exception {
         boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
         if (!exists) {
@@ -116,11 +131,12 @@ public class ImageUploadApplicationService {
         }
     }
 
-    private String objectName(String originalName) {
+    private String objectName(String originalName, String folder) {
         String ext = ".jpg";
         if (originalName != null && originalName.contains(".")) {
             ext = originalName.substring(originalName.lastIndexOf(".")).toLowerCase(Locale.ROOT);
         }
-        return "products/" + LocalDate.now() + "/" + UUID.randomUUID() + ext;
+        String safeFolder = "avatars".equals(folder) ? "avatars" : "products";
+        return safeFolder + "/" + LocalDate.now() + "/" + UUID.randomUUID() + ext;
     }
 }

@@ -8,6 +8,7 @@ import CheckoutPage from './views/CheckoutPage.vue'
 import OrdersPage from './views/OrdersPage.vue'
 import OrderDetailPage from './views/OrderDetailPage.vue'
 import PayPage from './views/PayPage.vue'
+import AccountPage from './views/AccountPage.vue'
 import AdminLoginPage from './views/admin/AdminLoginPage.vue'
 import AdminDashboardPage from './views/admin/AdminDashboardPage.vue'
 
@@ -20,6 +21,7 @@ export const router = createRouter({
     { path: '/cart', component: CartPage, meta: { auth: 'user' } },
     { path: '/checkout', component: CheckoutPage, meta: { auth: 'user' } },
     { path: '/pay/:id', component: PayPage, meta: { auth: 'user' } },
+    { path: '/account', component: AccountPage, meta: { auth: 'user' } },
     { path: '/orders', component: OrdersPage, meta: { auth: 'user' } },
     { path: '/orders/:id', component: OrderDetailPage, meta: { auth: 'user' } },
     { path: '/admin/login', component: AdminLoginPage },
