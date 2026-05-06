@@ -1,0 +1,14 @@
+[Unit]
+Description=KKMall Backend
+After=network.target
+
+[Service]
+User=klen
+WorkingDirectory=/opt/kkmall/backend
+EnvironmentFile=/opt/kkmall/backend/.env
+ExecStart=/usr/bin/java -jar /opt/kkmall/backend/kkmall-backend-0.1.0.jar
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

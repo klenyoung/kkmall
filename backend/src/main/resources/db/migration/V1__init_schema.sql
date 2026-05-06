@@ -1,0 +1,127 @@
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  phone VARCHAR(20) NOT NULL,
+  nickname VARCHAR(64) NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  UNIQUE KEY uk_users_phone (phone),
+  KEY idx_users_role (role)
+);
+
+CREATE TABLE IF NOT EXISTS addresses (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  receiver_name VARCHAR(64) NOT NULL,
+  receiver_phone VARCHAR(20) NOT NULL,
+  region VARCHAR(128) NOT NULL,
+  detail VARCHAR(255) NOT NULL,
+  is_default TINYINT NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  KEY idx_addresses_user_id (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS categories (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(64) NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  enabled TINYINT NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  KEY idx_categories_enabled_sort (enabled, sort_order)
+);
+
+CREATE TABLE IF NOT EXISTS products (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  category_id BIGINT NOT NULL,
+  title VARCHAR(128) NOT NULL,
+  description TEXT NULL,
+  images JSON NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  KEY idx_products_category_status (category_id, status),
+  KEY idx_products_status_created (status, created_at)
+);
+
+CREATE TABLE IF NOT EXISTS skus (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  product_id BIGINT NOT NULL,
+  spec_name VARCHAR(64) NOT NULL,
+  spec_value VARCHAR(64) NOT NULL,
+  price BIGINT NOT NULL,
+  stock INT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  KEY idx_skus_product_id (product_id)
+);
+
+CREATE TABLE IF NOT EXISTS cart_items (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  product_id BIGINT NOT NULL,
+  sku_id BIGINT NOT NULL,
+  quantity INT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  UNIQUE KEY uk_cart_user_sku (user_id, sku_id, deleted),
+  KEY idx_cart_user_id (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_no VARCHAR(32) NOT NULL,
+  user_id BIGINT NOT NULL,
+  product_amount BIGINT NOT NULL,
+  shipping_fee BIGINT NOT NULL,
+  payable_amount BIGINT NOT NULL,
+  status VARCHAR(32) NOT NULL,
+  address_snapshot JSON NOT NULL,
+  paid_at DATETIME NULL,
+  shipped_at DATETIME NULL,
+  completed_at DATETIME NULL,
+  cancelled_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  UNIQUE KEY uk_orders_order_no (order_no),
+  KEY idx_orders_user_created (user_id, created_at),
+  KEY idx_orders_status_created (status, created_at)
+);
+
+CREATE TABLE IF NOT EXISTS order_items (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_id BIGINT NOT NULL,
+  product_id BIGINT NOT NULL,
+  sku_id BIGINT NOT NULL,
+  title_snapshot VARCHAR(128) NOT NULL,
+  image_snapshot VARCHAR(512) NULL,
+  sku_snapshot VARCHAR(128) NOT NULL,
+  unit_price BIGINT NOT NULL,
+  quantity INT NOT NULL,
+  subtotal BIGINT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  KEY idx_order_items_order_id (order_id),
+  KEY idx_order_items_sku_id (sku_id)
+);
+
+CREATE TABLE IF NOT EXISTS shipments (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_id BIGINT NOT NULL,
+  logistics_company VARCHAR(64) NOT NULL,
+  tracking_no VARCHAR(64) NOT NULL,
+  shipped_at DATETIME NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  UNIQUE KEY uk_shipments_order_id (order_id)
+);

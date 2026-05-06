@@ -1,0 +1,16 @@
+.env
+.DS_Store
+Thumbs.db
+.runlogs/
+.uploads/
+__pycache__/
+*.pyc
+
+backend/target/
+backend/.env
+backend/.idea/
+.idea/
+.kiro/skills/
+
+node_modules/
+dist/
