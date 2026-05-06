@@ -12,7 +12,7 @@
       <a-col v-for="item in products" :key="item.id" :xs="24" :sm="12" :md="8" :lg="6">
         <router-link :to="`/products/${item.id}`">
           <a-card hoverable class="product-card">
-            <img v-if="isImageUrl(item.coverImage)" class="product-image" :src="item.coverImage" :alt="item.title" />
+            <img v-if="isImageUrl(item.coverImage) && !brokenImages.has(item.id)" class="product-image" :src="assetUrl(item.coverImage)" :alt="item.title" @error="brokenImages.add(item.id)" />
             <div v-else class="product-placeholder">{{ item.title.slice(0, 1) || 'K' }}</div>
             <a-card-meta :title="item.title">
               <template #description>
@@ -41,6 +41,7 @@ const route = useRoute()
 const categories = ref<Category[]>([])
 const products = ref<ProductCard[]>([])
 const categoryId = ref('')
+const brokenImages = ref(new Set<number>())
 
 async function load() {
   categories.value = await mallApi.categories()
@@ -53,5 +54,12 @@ onMounted(load)
 
 function isImageUrl(value?: string) {
   return Boolean(value && (/^https?:\/\//.test(value) || value.startsWith('/')))
+}
+
+function assetUrl(value?: string) {
+  if (!value) return ''
+  if (/^https?:\/\//.test(value)) return value
+  const base = import.meta.env.VITE_API_BASE || ''
+  return value.startsWith('/api') && base ? `${base}${value}` : value
 }
 </script>

@@ -37,4 +37,13 @@ public final class Jsons {
             return Collections.emptyMap();
         }
     }
+
+    public static List<Map<String, Object>> readMapList(String json) {
+        try {
+            if (json == null) return Collections.emptyList();
+            return MAPPER.readValue(json, new TypeReference<List<Map<String, Object>>>() {});
+        } catch (Exception ex) {
+            return Collections.emptyList();
+        }
+    }
 }

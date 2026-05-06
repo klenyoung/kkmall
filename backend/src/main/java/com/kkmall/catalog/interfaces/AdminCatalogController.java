@@ -26,6 +26,31 @@ public class AdminCatalogController {
         return ApiResponse.ok(service.productDetail(id));
     }
 
+    @GetMapping("/{id}/detail-config")
+    public ApiResponse<Map<String, Object>> detailConfig(@PathVariable Long id) {
+        return ApiResponse.ok(service.detailConfig(id));
+    }
+
+    @PutMapping("/{id}/detail-config")
+    public ApiResponse<Map<String, Object>> saveDetailConfig(@PathVariable Long id, @RequestBody AdminCatalogApplicationService.DetailConfigRequest request) {
+        return ApiResponse.ok(service.saveDetailConfig(id, request));
+    }
+
+    @PostMapping("/{id}/reviews")
+    public ApiResponse<Map<String, Object>> createReview(@PathVariable Long id, @RequestBody AdminCatalogApplicationService.ReviewRequest request) {
+        return ApiResponse.ok(service.saveReview(id, null, request));
+    }
+
+    @PutMapping("/{id}/reviews/{reviewId}")
+    public ApiResponse<Map<String, Object>> updateReview(@PathVariable Long id, @PathVariable Long reviewId, @RequestBody AdminCatalogApplicationService.ReviewRequest request) {
+        return ApiResponse.ok(service.saveReview(id, reviewId, request));
+    }
+
+    @DeleteMapping("/{id}/reviews/{reviewId}")
+    public ApiResponse<Map<String, Object>> deleteReview(@PathVariable Long id, @PathVariable Long reviewId) {
+        return ApiResponse.ok(service.deleteReview(id, reviewId));
+    }
+
     @PostMapping
     public ApiResponse<Map<String, Object>> create(@RequestBody AdminCatalogApplicationService.ProductRequest request) {
         return ApiResponse.ok(service.saveProduct(null, request));

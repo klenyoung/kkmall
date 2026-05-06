@@ -13,6 +13,7 @@ public class SkuPo extends BasePo {
     public String specName;
     public String specValue;
     public String specs;
+    public String imageUrl;
     public Long price;
     public Long marketPrice;
     public Long costPrice;

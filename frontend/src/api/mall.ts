@@ -2,8 +2,15 @@ import { http, PageResult } from './http'
 
 export interface Category { id: number; name: string; sortOrder: number; enabled: number }
 export interface ProductCard { id: number; title: string; brand?: string; subtitle?: string; coverImage?: string; mainImage?: string; minPrice: number; salesCount?: number; status: string }
-export interface Sku { id?: number; skuCode?: string; specName: string; specValue: string; specs?: Record<string, string>; price: number; marketPrice?: number; costPrice?: number; stock: number; weightGrams?: number; barcode?: string; enabled?: number | boolean }
-export interface ProductDetail extends ProductCard { description: string; sellingPoints?: string[]; unit?: string; detailHtml?: string; attributes?: Record<string, unknown>; images: string[]; categoryId: number; skus: Sku[] }
+export interface Sku { id?: number; skuCode?: string; specName: string; specValue: string; specs?: Record<string, string>; imageUrl?: string; price: number; marketPrice?: number; originPrice?: number; costPrice?: number; stock: number; weightGrams?: number; barcode?: string; enabled?: number | boolean; sellable?: boolean }
+export interface PriceRange { minPrice: number; maxPrice: number; currency: string }
+export interface PromotionText { id?: number; title: string; description?: string; label?: string; type?: string; enabled?: number | boolean; sortOrder?: number }
+export interface ServicePromise { id?: number; title: string; description?: string; icon?: string; enabled?: number | boolean; sortOrder?: number }
+export interface ProductParameter { id?: number; name: string; value: string; enabled?: number | boolean; sortOrder?: number }
+export interface ProductReview { id?: number; skuId?: number; userNickname: string; rating: number; content: string; imageUrls?: string[]; tags?: string[]; reviewedAt?: string; status?: string; sortOrder?: number }
+export interface ReviewSummary { reviewCount: number; goodRate: number; averageRating: number; tags: string[] }
+export interface ProductDetail extends ProductCard { description: string; sellingPoints?: string[]; tags?: string[]; unit?: string; detailHtml?: string; attributes?: Record<string, unknown>; images: string[]; imageUrls?: string[]; mainImageUrl?: string; categoryId: number; priceRange?: PriceRange; promotions?: PromotionText[]; servicePromises?: ServicePromise[]; parameters?: ProductParameter[]; reviewSummary?: ReviewSummary; reviews?: ProductReview[]; storeRecommendations?: ProductCard[]; relatedRecommendations?: ProductCard[]; skus: Sku[] }
+export interface ProductDetailConfig { product: ProductDetail; parameters: ProductParameter[]; servicePromises: ServicePromise[]; promotions: PromotionText[]; reviews: ProductReview[]; storeRecommendationIds: number[]; relatedRecommendationIds: number[] }
 export interface CartItem { id: number; productId: number; skuId: number; title: string; image?: string; specText: string; price: number; quantity: number; stock: number; subtotal: number; settleable: boolean }
 export interface CartView { items: CartItem[]; productAmount: number }
 export interface Address { id: number; receiverName: string; receiverPhone: string; region: string; detail: string; isDefault: number | boolean }
@@ -41,6 +48,11 @@ export const mallApi = {
   order: (id: number) => http.get(`/api/v1/orders/${id}`) as unknown as Promise<OrderDetail>,
   adminProducts: () => http.get('/api/v1/admin/products') as unknown as Promise<any[]>,
   adminProduct: (id: number) => http.get(`/api/v1/admin/products/${id}`) as unknown as Promise<ProductDetail>,
+  adminProductDetailConfig: (id: number) => http.get(`/api/v1/admin/products/${id}/detail-config`) as unknown as Promise<ProductDetailConfig>,
+  updateProductDetailConfig: (id: number, data: any) => http.put(`/api/v1/admin/products/${id}/detail-config`, data) as unknown as Promise<any>,
+  createProductReview: (id: number, data: any) => http.post(`/api/v1/admin/products/${id}/reviews`, data) as unknown as Promise<any>,
+  updateProductReview: (id: number, reviewId: number, data: any) => http.put(`/api/v1/admin/products/${id}/reviews/${reviewId}`, data) as unknown as Promise<any>,
+  deleteProductReview: (id: number, reviewId: number) => http.delete(`/api/v1/admin/products/${id}/reviews/${reviewId}`) as unknown as Promise<any>,
   createProduct: (data: any) => http.post('/api/v1/admin/products', data) as unknown as Promise<any>,
   updateProduct: (id: number, data: any) => http.put(`/api/v1/admin/products/${id}`, data) as unknown as Promise<any>,
   changeProductStatus: (id: number, status: string) => http.patch(`/api/v1/admin/products/${id}/status`, { status }) as unknown as Promise<any>,
