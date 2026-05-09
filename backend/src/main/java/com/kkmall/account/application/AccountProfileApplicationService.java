@@ -1,76 +1,67 @@
 package com.kkmall.account.application;
 
-import com.kkmall.account.infrastructure.UserMapper;
-import com.kkmall.account.infrastructure.UserPo;
-import com.kkmall.catalog.application.CatalogApplicationService;
+import com.kkmall.account.domain.User;
+import com.kkmall.account.domain.UserRepository;
+import com.kkmall.account.interfaces.dto.UserProfileDto;
+import com.kkmall.account.interfaces.dto.UserProfileDtoMapper;
 import com.kkmall.common.exception.BusinessException;
+import lombok.Data;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Map;
-import java.util.Set;
 
+/**
+ * 用户资料应用服务。
+ * 编排领域对象完成业务操作，不直接操作 PO。
+ */
 @Service
 public class AccountProfileApplicationService {
-    private static final Set<String> GENDERS = Set.of("UNKNOWN", "MALE", "FEMALE");
-    private final UserMapper userMapper;
 
-    public AccountProfileApplicationService(UserMapper userMapper) {
-        this.userMapper = userMapper;
+    private final UserRepository userRepository;
+    private final UserProfileDtoMapper dtoMapper;
+
+    public AccountProfileApplicationService(UserRepository userRepository, UserProfileDtoMapper dtoMapper) {
+        this.userRepository = userRepository;
+        this.dtoMapper = dtoMapper;
     }
 
-    public Map<String, Object> profile(Long userId) {
-        return view(user(userId));
+    public UserProfileDto profile(Long userId) {
+        User user = getUser(userId);
+        return dtoMapper.toDto(user);
     }
 
     @Transactional
-    public Map<String, Object> updateProfile(Long userId, ProfileRequest request) {
-        UserPo user = user(userId);
-        String nickname = request.nickname == null ? "" : request.nickname.trim();
-        if (nickname.length() < 2 || nickname.length() > 32) throw new BusinessException("PROFILE_NICKNAME_INVALID");
-        String gender = request.gender == null || request.gender.trim().isEmpty() ? "UNKNOWN" : request.gender.trim();
-        if (!GENDERS.contains(gender)) throw new BusinessException("PROFILE_GENDER_INVALID");
-        if (request.birthday != null && request.birthday.isAfter(LocalDate.now())) {
-            throw new BusinessException("PROFILE_BIRTHDAY_INVALID");
-        }
-        user.nickname = nickname;
-        user.avatarUrl = blankToNull(request.avatarUrl);
-        user.gender = gender;
-        user.birthday = request.birthday;
-        userMapper.updateById(user);
-        return view(user);
-    }
-
-    private UserPo user(Long userId) {
-        UserPo user = userMapper.selectById(userId);
-        if (user == null) throw new BusinessException("USER_NOT_FOUND");
-        if (user.gender == null || user.gender.trim().isEmpty()) user.gender = "UNKNOWN";
-        return user;
-    }
-
-    private Map<String, Object> view(UserPo user) {
-        return CatalogApplicationService.mapOf(
-                "id", user.id,
-                "phone", user.phone,
-                "nickname", user.nickname,
-                "avatarUrl", user.avatarUrl,
-                "gender", user.gender == null ? "UNKNOWN" : user.gender,
-                "birthday", user.birthday,
-                "role", user.role,
-                "createdAt", user.createdAt
+    public UserProfileDto updateProfile(Long userId, ProfileRequest request) {
+        User user = getUser(userId);
+        // 业务规则校验在领域对象内部完成
+        user.updateProfile(
+                request.getNickname(),
+                request.getAvatarUrl(),
+                request.getGender(),
+                request.getBirthday()
         );
+        userRepository.save(user);
+        return dtoMapper.toDto(user);
     }
 
-    private String blankToNull(String value) {
-        if (value == null || value.trim().isEmpty()) return null;
-        return value.trim();
+    /**
+     * 将 User 领域对象转为 DTO（供 AuthApplicationService 复用）。
+     */
+    public UserProfileDto toDto(User user) {
+        return dtoMapper.toDto(user);
     }
 
+    private User getUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("USER_NOT_FOUND"));
+    }
+
+    @Data
     public static class ProfileRequest {
-        public String nickname;
-        public String avatarUrl;
-        public String gender;
-        public LocalDate birthday;
+        private String nickname;
+        private String avatarUrl;
+        private String gender;
+        private LocalDate birthday;
     }
 }

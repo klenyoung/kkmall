@@ -1,15 +1,28 @@
 package com.kkmall.cart.interfaces;
 
 import com.kkmall.cart.application.CartApplicationService;
+import com.kkmall.cart.interfaces.dto.CartOperationResultDto;
+import com.kkmall.cart.interfaces.dto.CartViewDto;
+import com.kkmall.cart.interfaces.dto.DeleteResultDto;
 import com.kkmall.common.interfaces.ApiResponse;
 import com.kkmall.security.SecurityUtils;
-import org.springframework.web.bind.annotation.*;
+import lombok.Data;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
+/**
+ * 购物车接口。
+ */
 @RestController
 @RequestMapping("/api/v1/cart")
 public class CartController {
+
     private final CartApplicationService cartApplicationService;
 
     public CartController(CartApplicationService cartApplicationService) {
@@ -17,38 +30,36 @@ public class CartController {
     }
 
     @GetMapping
-    public ApiResponse<Map<String, Object>> list() {
+    public ApiResponse<CartViewDto> list() {
         return ApiResponse.ok(cartApplicationService.list(SecurityUtils.currentUserId()));
     }
 
     @PostMapping("/items")
-    public ApiResponse<Map<String, Object>> add(@RequestBody AddCartRequest request) {
-        return ApiResponse.ok(cartApplicationService.add(SecurityUtils.currentUserId(), request.skuId, request.quantity));
+    public ApiResponse<CartOperationResultDto> add(@RequestBody AddCartRequest request) {
+        return ApiResponse.ok(cartApplicationService.add(
+                SecurityUtils.currentUserId(), request.getSkuId(), request.getQuantity()));
     }
 
     @PatchMapping("/items/{id}")
-    public ApiResponse<Map<String, Object>> update(@PathVariable Long id, @RequestBody UpdateCartRequest request) {
-        return ApiResponse.ok(cartApplicationService.update(SecurityUtils.currentUserId(), id, request.quantity));
+    public ApiResponse<CartOperationResultDto> update(@PathVariable Long id, @RequestBody UpdateCartRequest request) {
+        return ApiResponse.ok(cartApplicationService.update(
+                SecurityUtils.currentUserId(), id, request.getQuantity()));
     }
 
     @DeleteMapping("/items/{id}")
-    public ApiResponse<Map<String, Object>> delete(@PathVariable Long id) {
+    public ApiResponse<DeleteResultDto> delete(@PathVariable Long id) {
         cartApplicationService.delete(SecurityUtils.currentUserId(), id);
-        return ApiResponse.ok(CatalogDelete.deleted());
+        return ApiResponse.ok(DeleteResultDto.success());
     }
 
+    @Data
     public static class AddCartRequest {
-        public Long skuId;
-        public int quantity;
+        private Long skuId;
+        private int quantity;
     }
 
+    @Data
     public static class UpdateCartRequest {
-        public int quantity;
-    }
-
-    static final class CatalogDelete {
-        static Map<String, Object> deleted() {
-            return com.kkmall.catalog.application.CatalogApplicationService.mapOf("deleted", true);
-        }
+        private int quantity;
     }
 }

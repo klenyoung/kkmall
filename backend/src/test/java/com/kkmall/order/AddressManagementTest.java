@@ -26,17 +26,17 @@ class AddressManagementTest {
         OrderApplicationService service = new OrderApplicationService(addressMapper, null, null, null, null, null, null, null, null);
 
         OrderApplicationService.AddressRequest request = new OrderApplicationService.AddressRequest();
-        request.receiverName = "张三";
-        request.receiverPhone = "13800138000";
-        request.region = "上海市 浦东新区";
-        request.detail = "世纪大道 100 号";
-        request.isDefault = false;
+        request.setReceiverName("张三");
+        request.setReceiverPhone("13800138000");
+        request.setRegion("上海市 浦东新区");
+        request.setDetail("世纪大道 100 号");
+        request.setIsDefault(false);
 
         service.createAddress(1L, request);
 
         ArgumentCaptor<AddressPo> captor = ArgumentCaptor.forClass(AddressPo.class);
         verify(addressMapper).insert(captor.capture());
-        assertThat(captor.getValue().isDefault).isEqualTo(1);
+        assertThat(captor.getValue().getIsDefault()).isEqualTo(1);
     }
 
     @Test
@@ -63,19 +63,19 @@ class AddressManagementTest {
 
         service.setDefaultAddress(1L, 2L);
 
-        assertThat(oldDefault.isDefault).isEqualTo(0);
-        assertThat(target.isDefault).isEqualTo(1);
+        assertThat(oldDefault.getIsDefault()).isEqualTo(0);
+        assertThat(target.getIsDefault()).isEqualTo(1);
         verify(addressMapper).updateById(oldDefault);
         verify(addressMapper).updateById(target);
     }
 
     private OrderApplicationService.AddressRequest validRequest() {
         OrderApplicationService.AddressRequest request = new OrderApplicationService.AddressRequest();
-        request.receiverName = "张三";
-        request.receiverPhone = "13800138000";
-        request.region = "上海市 浦东新区";
-        request.detail = "世纪大道 100 号";
-        request.isDefault = false;
+        request.setReceiverName("张三");
+        request.setReceiverPhone("13800138000");
+        request.setRegion("上海市 浦东新区");
+        request.setDetail("世纪大道 100 号");
+        request.setIsDefault(false);
         return request;
     }
 
@@ -87,13 +87,13 @@ class AddressManagementTest {
 
     private AddressPo address(Long id, Long userId, Integer isDefault) {
         AddressPo address = new AddressPo();
-        address.id = id;
-        address.userId = userId;
-        address.receiverName = "张三";
-        address.receiverPhone = "13800138000";
-        address.region = "上海市 浦东新区";
-        address.detail = "世纪大道 100 号";
-        address.isDefault = isDefault;
+        address.setId(id);
+        address.setUserId(userId);
+        address.setReceiverName("张三");
+        address.setReceiverPhone("13800138000");
+        address.setRegion("上海市 浦东新区");
+        address.setDetail("世纪大道 100 号");
+        address.setIsDefault(isDefault);
         return address;
     }
 }

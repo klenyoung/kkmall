@@ -3,9 +3,9 @@ package com.kkmall.order.interfaces;
 import com.kkmall.common.interfaces.ApiResponse;
 import com.kkmall.common.interfaces.PageResult;
 import com.kkmall.order.application.OrderApplicationService;
+import com.kkmall.order.interfaces.dto.OrderDetailDto;
+import com.kkmall.order.interfaces.dto.OrderSummaryDto;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/admin/orders")
@@ -17,14 +17,14 @@ public class AdminOrderController {
     }
 
     @GetMapping
-    public ApiResponse<PageResult<Map<String, Object>>> list(@RequestParam(required = false) String status,
-                                                             @RequestParam(defaultValue = "1") int page,
-                                                             @RequestParam(defaultValue = "20") int pageSize) {
+    public ApiResponse<PageResult<OrderSummaryDto>> list(@RequestParam(required = false) String status,
+                                                         @RequestParam(defaultValue = "1") int page,
+                                                         @RequestParam(defaultValue = "20") int pageSize) {
         return ApiResponse.ok(service.adminOrders(status, page, pageSize));
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<Map<String, Object>> detail(@PathVariable Long id) {
+    public ApiResponse<OrderDetailDto> detail(@PathVariable Long id) {
         return ApiResponse.ok(service.adminOrderDetail(id));
     }
 }

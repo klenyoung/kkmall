@@ -5,10 +5,11 @@ import com.kkmall.catalog.application.CatalogApplicationService;
 import com.kkmall.catalog.infrastructure.ProductPo;
 import com.kkmall.catalog.infrastructure.SkuMapper;
 import com.kkmall.catalog.infrastructure.SkuPo;
+import com.kkmall.catalog.interfaces.dto.ProductDetailDto;
+import com.kkmall.catalog.interfaces.dto.SkuDto;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -16,67 +17,72 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class CatalogApplicationServiceTest {
+
+    @SuppressWarnings("unchecked")
     @Test
     void productDetailViewIncludesTmallLiteDecisionData() {
         SkuMapper skuMapper = mock(SkuMapper.class);
+
         SkuPo enabledSku = new SkuPo();
-        enabledSku.id = 11L;
-        enabledSku.productId = 7L;
-        enabledSku.skuCode = "SKU-7-1";
-        enabledSku.specName = "颜色";
-        enabledSku.specValue = "红色";
-        enabledSku.specs = "{\"颜色\":\"红色\"}";
-        enabledSku.price = 9900L;
-        enabledSku.marketPrice = 12900L;
-        enabledSku.stock = 8;
-        enabledSku.enabled = 1;
+        enabledSku.setId(11L);
+        enabledSku.setProductId(7L);
+        enabledSku.setSkuCode("SKU-7-1");
+        enabledSku.setSpecName("颜色");
+        enabledSku.setSpecValue("红色");
+        enabledSku.setSpecs("{\"颜色\":\"红色\"}");
+        enabledSku.setPrice(9900L);
+        enabledSku.setMarketPrice(12900L);
+        enabledSku.setStock(8);
+        enabledSku.setEnabled(1);
 
         SkuPo disabledSku = new SkuPo();
-        disabledSku.id = 12L;
-        disabledSku.productId = 7L;
-        disabledSku.skuCode = "SKU-7-2";
-        disabledSku.specName = "颜色";
-        disabledSku.specValue = "灰色";
-        disabledSku.specs = "{\"颜色\":\"灰色\"}";
-        disabledSku.price = 10900L;
-        disabledSku.marketPrice = 13900L;
-        disabledSku.stock = 0;
-        disabledSku.enabled = 0;
+        disabledSku.setId(12L);
+        disabledSku.setProductId(7L);
+        disabledSku.setSkuCode("SKU-7-2");
+        disabledSku.setSpecName("颜色");
+        disabledSku.setSpecValue("灰色");
+        disabledSku.setSpecs("{\"颜色\":\"灰色\"}");
+        disabledSku.setPrice(10900L);
+        disabledSku.setMarketPrice(13900L);
+        disabledSku.setStock(0);
+        disabledSku.setEnabled(0);
 
         when(skuMapper.selectList(any(Wrapper.class))).thenReturn(List.of(enabledSku, disabledSku));
 
         CatalogApplicationService service = new CatalogApplicationService(null, null, skuMapper);
+
         ProductPo product = new ProductPo();
-        product.id = 7L;
-        product.categoryId = 2L;
-        product.title = "轻量防泼水通勤双肩包";
-        product.brand = "KKMall 自营";
-        product.subtitle = "通勤出行轻巧收纳";
-        product.description = "商品描述";
-        product.sellingPoints = "[\"满99包邮\",\"7天无理由\"]";
-        product.unit = "件";
-        product.detailHtml = "<p>详情</p>";
-        product.attributes = "{\"材质\":\"尼龙\"}";
-        product.images = "[\"/uploads/bag.png\"]";
-        product.mainImage = "/uploads/bag.png";
-        product.salesCount = 128;
-        product.status = "ON_SALE";
+        product.setId(7L);
+        product.setCategoryId(2L);
+        product.setTitle("轻量防泼水通勤双肩包");
+        product.setBrand("KKMall 自营");
+        product.setSubtitle("通勤出行轻巧收纳");
+        product.setDescription("商品描述");
+        product.setSellingPoints("[\"满99包邮\",\"7天无理由\"]");
+        product.setUnit("件");
+        product.setDetailHtml("<p>详情</p>");
+        product.setAttributes("{\"材质\":\"尼龙\"}");
+        product.setImages("[\"/uploads/bag.png\"]");
+        product.setMainImage("/uploads/bag.png");
+        product.setSalesCount(128);
+        product.setStatus("ON_SALE");
 
-        Map<String, Object> view = service.productDetailView(product);
+        ProductDetailDto view = service.productDetailView(product);
 
-        assertThat(view).containsKeys(
-                "priceRange",
-                "promotions",
-                "servicePromises",
-                "parameters",
-                "reviewSummary",
-                "reviews",
-                "storeRecommendations",
-                "relatedRecommendations"
-        );
-        assertThat((Map<String, Object>) view.get("priceRange")).containsEntry("minPrice", 9900L).containsEntry("maxPrice", 10900L);
-        List<Map<String, Object>> skus = (List<Map<String, Object>>) view.get("skus");
-        assertThat(skus.get(0)).containsEntry("sellable", true).containsEntry("originPrice", 12900L);
-        assertThat(skus.get(1)).containsEntry("sellable", false);
+        assertThat(view.getPriceRange()).isNotNull();
+        assertThat(view.getPriceRange().getMinPrice()).isEqualTo(9900L);
+        assertThat(view.getPriceRange().getMaxPrice()).isEqualTo(10900L);
+        assertThat(view.getPromotions()).isNotNull();
+        assertThat(view.getServicePromises()).isNotNull();
+        assertThat(view.getParameters()).isNotNull();
+        assertThat(view.getReviewSummary()).isNotNull();
+        assertThat(view.getReviews()).isNotNull();
+        assertThat(view.getStoreRecommendations()).isNotNull();
+        assertThat(view.getRelatedRecommendations()).isNotNull();
+
+        List<SkuDto> skus = view.getSkus();
+        assertThat(skus.get(0).getSellable()).isTrue();
+        assertThat(skus.get(0).getOriginPrice()).isEqualTo(12900L);
+        assertThat(skus.get(1).getSellable()).isFalse();
     }
 }

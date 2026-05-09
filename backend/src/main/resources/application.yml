@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: ${MYSQL_URL:jdbc:mysql://172.23.86.146:3306/kkmall?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    url: ${MYSQL_URL:jdbc:mysql://192.168.54.147:3306/kkmall?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
     username: ${MYSQL_USER:root}
-    password: ${MYSQL_PASSWORD:}
+    password: ${MYSQL_PASSWORD:itsm123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
   flyway:
     enabled: true
@@ -31,9 +31,9 @@ kkmall:
     code: ${KKMALL_MOCK_CODE:123456}
   storage:
     minio:
-      endpoint: ${MINIO_ENDPOINT:http://172.23.86.146:9000}
+      endpoint: ${MINIO_ENDPOINT:http://192.168.54.147:9000}
       access-key: ${MINIO_USER:itsm}
       secret-key: ${MINIO_PASS:itsm123456}
       bucket: ${MINIO_BUCKET:kkmall}
-      public-base-url: ${MINIO_PUBLIC_BASE_URL:http://172.23.86.146:9000/kkmall}
+      public-base-url: ${MINIO_PUBLIC_BASE_URL:http://192.168.54.147:9000/kkmall}
     local-dir: ${KKMALL_UPLOAD_DIR:uploads}
